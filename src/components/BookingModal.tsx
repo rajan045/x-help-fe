@@ -121,10 +121,7 @@ export default function BookingModal({ opened, onClose, onBookingComplete }: Boo
           <Stack gap="md">
             <Title order={3}>Select Date & Time</Title>
             <DatePicker
-              label="Session Date"
-              placeholder="Pick date"
               value={selectedDate}
-              onChange={setSelectedDate}
               minDate={new Date()}
             />
             

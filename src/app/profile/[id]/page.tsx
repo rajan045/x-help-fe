@@ -219,12 +219,6 @@ In my free time, I love reading about emerging technologies, traveling, and prac
   }
 };
 
-interface ProfilePageProps {
-  params: {
-    id: string;
-  };
-}
-
 const SeekerProfile = ({ profile }: { profile: SeekerProfile }) => {
   return (
     <Stack gap="lg">
@@ -482,9 +476,10 @@ const MentorProfile = ({ profile }: { profile: MentorProfile }) => {
   );
 };
 
-export default function ProfilePage({ params }: ProfilePageProps) {
-  const { id } = params;
-  const profile = mockProfiles[id];
+export default function ProfilePage() {
+    const id = 'mentor-1'
+
+    const profile = mockProfiles[id];
 
   if (!profile) {
     return (

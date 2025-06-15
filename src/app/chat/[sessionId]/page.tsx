@@ -63,12 +63,6 @@ interface Session {
   feedback?: string;
 }
 
-interface ChatPageProps {
-  params: {
-    sessionId: string;
-  };
-}
-
 // Mock data
 const mockSession: Session = {
   id: 'session-123',
@@ -125,7 +119,7 @@ const mockMessages: Message[] = [
   }
 ];
 
-export default function ChatPage({}: ChatPageProps) {
+export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [newMessage, setNewMessage] = useState('');
   const [session, setSession] = useState<Session>(mockSession);
