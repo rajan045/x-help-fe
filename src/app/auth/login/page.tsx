@@ -16,7 +16,7 @@ import {
   IconArrowRight
 } from '@tabler/icons-react';
 import { Button } from '@mantine/core';
-import { loginSchema, type LoginFormData } from '@/validators/auth';
+import { type LoginFormData } from '@/validators/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { SOCIAL_PROVIDERS } from '@/constants/auth';
 

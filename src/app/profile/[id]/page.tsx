@@ -18,27 +18,21 @@ import {
   Divider,
   Paper,
   Rating,
-  Timeline,
-  Tabs,
   ActionIcon,
   Modal
 } from '@mantine/core';
 import { 
   IconStar, 
   IconCalendarEvent,
-  IconMail,
   IconMapPin,
-  IconClock,
   IconShieldCheck,
   IconUsers,
-  IconAward,
   IconBulb,
   IconQuestionMark,
   IconHeart,
   IconShare,
   IconMessageCircle,
-  IconVideo,
-  IconPhone
+  IconVideo
 } from '@tabler/icons-react';
 
 // Type definitions
@@ -239,7 +233,7 @@ const SeekerProfile = ({ profile }: { profile: SeekerProfile }) => {
         <Stack gap="md">
           <Group gap="xs">
             <IconBulb size={20} className="text-blue-500" />
-            <Title order={3}>Skills I'm Working On</Title>
+            <Title order={3}>Skills I&apos;m Working On</Title>
           </Group>
           <Group gap="xs">
             {profile.skillsWorkingOn.map((skill, index) => (
@@ -295,7 +289,7 @@ const SeekerProfile = ({ profile }: { profile: SeekerProfile }) => {
                   </Text>
                   
                   <Text size="sm" c="dimmed">
-                    "{advice.review}"
+                    &quot;{advice.review}&quot;
                   </Text>
                   
                   <Group gap="xs">
@@ -382,7 +376,7 @@ const MentorProfile = ({ profile }: { profile: MentorProfile }) => {
                     <Rating value={mentee.rating} readOnly size="sm" />
                   </Group>
                   <Text size="sm" c="dimmed" style={{ fontStyle: 'italic' }}>
-                    "{mentee.testimonial}"
+                    &quot;{mentee.testimonial}&quot;
                   </Text>
                 </Stack>
               </Card>
@@ -479,7 +473,7 @@ const MentorProfile = ({ profile }: { profile: MentorProfile }) => {
       <BookingModal
         opened={showBookingModal}
         onClose={() => setShowBookingModal(false)}
-        onBookingComplete={(bookingData) => {
+        onBookingComplete={() => {
           // Navigate to chat page after booking
           router.push('/chat/session-123');
         }}

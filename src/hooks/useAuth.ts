@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthFormData, AuthResponse, SocialProvider } from '@/types/auth';
+import { AuthResponse, SocialProvider } from '@/types/auth';
 import { LoginFormData, SignupFormData } from '@/validators/auth';
 
 export const useAuth = () => {
@@ -27,8 +27,8 @@ export const useAuth = () => {
 
       router.push('/dashboard');
       return { user: result.user, error: null };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
       setError(message);
       return { user: null, error: { code: 'LOGIN_ERROR', message } };
     } finally {
@@ -55,8 +55,8 @@ export const useAuth = () => {
 
       router.push('/dashboard');
       return { user: result.user, error: null };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
       setError(message);
       return { user: null, error: { code: 'SIGNUP_ERROR', message } };
     } finally {
@@ -81,8 +81,8 @@ export const useAuth = () => {
 
       router.push('/dashboard');
       return { user: result.user, error: null };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
       setError(message);
       return { user: null, error: { code: 'SOCIAL_AUTH_ERROR', message } };
     } finally {
@@ -96,7 +96,7 @@ export const useAuth = () => {
       // TODO: Implement logout logic
       await fetch('/api/auth/logout', { method: 'POST' });
       router.push('/auth/login');
-    } catch (err) {
+    } catch {
       setError('Failed to logout');
     } finally {
       setIsLoading(false);

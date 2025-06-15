@@ -10,31 +10,38 @@ import {
   Select, 
   Textarea, 
   Paper, 
-  Avatar, 
   Badge, 
   Divider,
   Radio,
   Checkbox,
   Title,
-  Alert,
   Timeline
 } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { 
   IconCalendarEvent, 
   IconCreditCard, 
-  IconCheck, 
-  IconAlertCircle,
-  IconVideo,
-  IconMessageCircle,
-  IconUser,
-  IconStar
+  IconCheck,
+  IconMessageCircle
 } from '@tabler/icons-react';
+
+interface BookingData {
+  date: Date | null;
+  time: string;
+  duration: number;
+  type: string;
+  question: string;
+  context: string;
+  totalCost: number;
+  paymentMethod: string;
+  bookingId: string;
+  status: string;
+}
 
 interface BookingModalProps {
   opened: boolean;
   onClose: () => void;
-  onBookingComplete: (bookingData: any) => void;
+  onBookingComplete: (bookingData: BookingData) => void;
 }
 
 export default function BookingModal({ opened, onClose, onBookingComplete }: BookingModalProps) {
@@ -237,7 +244,7 @@ export default function BookingModal({ opened, onClose, onBookingComplete }: Boo
               <IconCheck size={64} className="text-green-500 mx-auto mb-4" />
               <Title order={2} c="green">Session Booked Successfully!</Title>
               <Text c="dimmed" mt="sm">
-                You'll receive a confirmation email shortly.
+                You&apos;ll receive a confirmation email shortly.
               </Text>
             </div>
           </Stack>

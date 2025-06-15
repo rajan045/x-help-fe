@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { 
@@ -18,7 +18,7 @@ import {
   IconUsers,
   IconTarget
 } from '@tabler/icons-react';
-import { Card, Text, Badge, Avatar, Group, Stack, Button, Notification } from '@mantine/core';
+import { Card, Text, Badge, Avatar, Button } from '@mantine/core';
 
 // Mock data - replace with actual data from your backend
 const mockUser = {
@@ -260,7 +260,6 @@ const NewUserWelcome = () => {
 
 // Logged-in User Dashboard Component
 const UserDashboard = () => {
-  const [selectedTab, setSelectedTab] = useState('overview');
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -278,7 +277,7 @@ const UserDashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome back, {mockUser.name}! 👋
               </h1>
-              <p className="text-gray-600 mt-1">Here's what's happening with your career journey</p>
+              <p className="text-gray-600 mt-1">Here&apos;s what&apos;s happening with your career journey</p>
             </div>
             <Link href="/profile/seeker-1" style={{ textDecoration: 'none' }}>
               <Avatar src={mockUser.avatar} size={50} style={{ backgroundColor: '#3b82f6' }} className="cursor-pointer hover:opacity-80 transition-opacity" />

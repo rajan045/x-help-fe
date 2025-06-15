@@ -15,20 +15,15 @@ import {
   Modal,
   Rating,
   Textarea,
-  Card,
   Alert,
-  Divider,
   Menu,
   Tooltip
 } from '@mantine/core';
 import { 
   IconSend, 
   IconVideo, 
-  IconPhone, 
   IconDots,
   IconClock,
-  IconStar,
-  IconThumbUp,
   IconShare,
   IconFlag,
   IconCamera,
@@ -38,7 +33,6 @@ import {
   IconExternalLink
 } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
 
 interface Message {
   id: string;
@@ -131,8 +125,7 @@ const mockMessages: Message[] = [
   }
 ];
 
-export default function ChatPage({ params }: ChatPageProps) {
-  const { sessionId } = params;
+export default function ChatPage({}: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [newMessage, setNewMessage] = useState('');
   const [session, setSession] = useState<Session>(mockSession);
@@ -140,9 +133,9 @@ export default function ChatPage({ params }: ChatPageProps) {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [, setCurrentTime] = useState(new Date());
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {

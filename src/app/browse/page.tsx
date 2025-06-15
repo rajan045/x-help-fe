@@ -16,22 +16,17 @@ import {
   Select,
   TextInput,
   MultiSelect,
-  Switch,
   Title,
   Divider,
-  Paper,
-  Flex,
-  ActionIcon
+  Paper
 } from '@mantine/core';
 import { 
   IconSearch, 
   IconFilter, 
   IconStar, 
   IconCalendarEvent,
-  IconVideo,
   IconMail,
   IconMapPin,
-  IconClock,
   IconShieldCheck
 } from '@tabler/icons-react';
 
@@ -127,7 +122,23 @@ const mockMentors = [
   }
 ];
 
-const MentorCard = ({ mentor }: { mentor: any }) => {
+interface Mentor {
+  id: number;
+  name: string;
+  profilePicture: string;
+  tags: string[];
+  experience: string;
+  rating: number;
+  sessionsCompleted: number;
+  languages: string[];
+  availability: string;
+  isPaid: boolean;
+  hourlyRate?: number;
+  topics: string[];
+  location: string;
+}
+
+const MentorCard = ({ mentor }: { mentor: Mentor }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
