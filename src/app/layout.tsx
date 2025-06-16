@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import Header from "../components/Header";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,7 +37,10 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${poppins.variable} ${dmSans.variable}`}>
       <body className="font-sans antialiased bg-gray-50">
         <Providers>
-          {children}
+          <Header />
+          <main>
+            {children}
+          </main>
         </Providers>
       </body>
     </html>
