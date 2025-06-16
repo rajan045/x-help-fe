@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -27,8 +26,7 @@ import {
   IconDashboard,
   IconMessageCircle,
   IconCalendarEvent,
-  IconSearch,
-  IconMenu2
+  IconSearch
 } from '@tabler/icons-react';
 
 // Mock user data - replace with actual auth context

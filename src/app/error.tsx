@@ -68,8 +68,8 @@ export default function Error({ error, reset }: ErrorProps) {
               Something went wrong!
             </Title>
             <Text size="lg" c="dimmed" maw={500} mx="auto">
-              We encountered an unexpected error. Don't worry, our team has been notified 
-              and we're working to fix it.
+              We encountered an unexpected error. Don&apos;t worry, our team has been notified 
+              and we&apos;re working to fix it.
             </Text>
           </motion.div>
 
@@ -161,7 +161,7 @@ export default function Error({ error, reset }: ErrorProps) {
             className="text-center mt-8"
           >
             <Text size="sm" c="dimmed" fs="italic">
-              "Failure is simply the opportunity to begin again, this time more intelligently." 
+              &quot;Failure is simply the opportunity to begin again, this time more intelligently.&quot; 
               - Henry Ford
             </Text>
           </motion.div>

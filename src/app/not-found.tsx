@@ -97,8 +97,8 @@ export default function NotFound() {
               Oops! Page Not Found
             </Title>
             <Text size="lg" c="dimmed" maw={500} mx="auto">
-              The page you're looking for seems to have wandered off. 
-              Don't worry, even the best career paths have unexpected detours!
+              The page you&apos;re looking for seems to have wandered off. 
+              Don&apos;t worry, even the best career paths have unexpected detours!
             </Text>
           </motion.div>
 
@@ -188,8 +188,8 @@ export default function NotFound() {
             className="text-center mt-8"
           >
             <Text size="sm" c="dimmed" fs="italic">
-              "Every expert was once a beginner. Every pro was once an amateur. 
-              Every icon was once an unknown." - Robin Sharma
+              &quot;Every expert was once a beginner. Every pro was once an amateur. 
+              Every icon was once an unknown.&quot; - Robin Sharma
             </Text>
           </motion.div>
         </Stack>
