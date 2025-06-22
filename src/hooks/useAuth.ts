@@ -68,19 +68,14 @@ export const useAuth = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Implement social authentication with NextAuth
-      const response = await fetch(`/api/auth/${provider}`, {
-        method: 'POST',
-      });
-
-      const result = await response.json();
+      // Redirect to backend Google OAuth endpoint
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
       
-      if (!response.ok) {
-        throw new Error(result.message || `${provider} authentication failed`);
-      }
-
-      router.push('/dashboard');
-      return { user: result.user, error: null };
+      // Redirect to backend OAuth
+      window.location.href = `${backendUrl}/api/auth/${provider}`;
+      
+      // Return pending state as the redirect will handle the rest
+      return { user: null, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred';
       setError(message);
