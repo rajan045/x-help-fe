@@ -5,6 +5,7 @@ import { TextInput, PasswordInput, Text, Divider, Group, Alert, Button, Checkbox
 import { useForm } from '@mantine/form';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   IconBrandGoogle, 
   IconMail,
@@ -19,8 +20,7 @@ import {
 } from '@tabler/icons-react';
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { signup, socialAuth, loading, error, clearError } = useAuth();
   
   const form = useForm({
     initialValues: {
@@ -43,7 +43,7 @@ export default function SignupPage() {
       },
       password: (value) => {
         if (!value) return 'Password is required';
-        if (value.length < 8) return 'Password must be at least 8 characters long';
+        if (value.length < 6) return 'Password must be at least 6 characters long';
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) 
           return 'Password must contain uppercase, lowercase, and number';
         return null;
@@ -55,32 +55,30 @@ export default function SignupPage() {
   });
 
   const handleSubmit = async (values: typeof form.values) => {
-    setIsLoading(true);
-    setError(null);
+    if (error) clearError();
+    
     try {
-      // TODO: Implement signup logic
-      console.log(values);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await signup({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        role: 'seeker', // Default role
+      });
     } catch (error) {
-      setError('An error occurred during signup. Please try again.');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error('Signup error:', error);
+      // Error is handled by the useAuth hook
     }
   };
 
   const handleSocialSignup = async () => {
-    setIsLoading(true);
-    setError(null);
+    if (error) clearError();
+    
     try {
-      // TODO: Implement Google signup
-      console.log('Signing up with Google');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await socialAuth('google');
     } catch (error) {
-      setError('Failed to sign up with Google. Please try again.');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      console.error('Social signup error:', error);
+      // Error is handled by the useAuth hook
     }
   };
 
@@ -160,7 +158,7 @@ export default function SignupPage() {
                   input: 'h-12 pl-10 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 rounded-xl',
                   error: 'text-red-500 text-xs mt-1 font-medium',
                 }}
-                disabled={isLoading}
+                disabled={loading}
                 {...form.getInputProps('name')}
               />
             </div>
@@ -177,7 +175,7 @@ export default function SignupPage() {
                   input: 'h-12 pl-10 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 rounded-xl',
                   error: 'text-red-500 text-xs mt-1 font-medium',
                 }}
-                disabled={isLoading}
+                disabled={loading}
                 {...form.getInputProps('email')}
               />
             </div>
@@ -202,7 +200,7 @@ export default function SignupPage() {
                   innerInput: 'h-12',
                   error: 'text-red-500 text-xs mt-1 font-medium',
                 }}
-                disabled={isLoading}
+                disabled={loading}
                 {...form.getInputProps('password')}
               />
               {form.values.password && (
@@ -253,7 +251,7 @@ export default function SignupPage() {
                   innerInput: 'h-12',
                   error: 'text-red-500 text-xs mt-1 font-medium',
                 }}
-                disabled={isLoading}
+                disabled={loading}
                 {...form.getInputProps('confirmPassword')}
               />
               {form.values.confirmPassword && form.values.password === form.values.confirmPassword && (
@@ -285,24 +283,24 @@ export default function SignupPage() {
                 label: 'cursor-pointer',
                 error: 'text-red-500 text-xs mt-1 font-medium',
               }}
-              disabled={isLoading}
+              disabled={loading}
               error={form.errors.agreeToTerms}
             />
           </div>
 
           <motion.div
-            whileHover={{ scale: isLoading ? 1 : 1.01 }}
-            whileTap={{ scale: isLoading ? 1 : 0.99 }}
+            whileHover={{ scale: loading ? 1 : 1.01 }}
+            whileTap={{ scale: loading ? 1 : 0.99 }}
             className="flex justify-center pt-2"
           >
             <Button
               type="submit"
               size="md"
-              loading={isLoading}
+              loading={loading}
               className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </motion.div>
         </form>
@@ -335,10 +333,10 @@ export default function SignupPage() {
           <Button
             variant="outline"
             onClick={handleSocialSignup}
-            loading={isLoading}
+            loading={loading}
             className="px-8 h-12 border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200 font-medium text-gray-700 rounded-xl"
             leftSection={<IconBrandGoogle size={20} className="text-red-500" />}
-            disabled={isLoading}
+            disabled={loading}
           >
             Continue with Google
           </Button>

@@ -16,6 +16,7 @@ export const signupSchema = z.object({
       'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     ),
   confirmPassword: z.string(),
+  role: z.enum(['mentor', 'seeker', 'both']).default('seeker'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],

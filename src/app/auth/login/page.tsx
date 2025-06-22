@@ -21,7 +21,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { SOCIAL_PROVIDERS } from '@/constants/auth';
 
 export default function LoginPage() {
-  const { login, socialAuth, isLoading, error } = useAuth();
+  const { login, socialAuth, loading, error, clearError } = useAuth();
   const [rememberMe, setRememberMe] = useState(false);
   
   const form = useForm<LoginFormData>({
@@ -40,14 +40,25 @@ export default function LoginPage() {
   });
 
   const handleSubmit = async (values: LoginFormData) => {
-    const result = await login(values);
-    if (result.error) {
-      form.setErrors({ email: result.error.message });
+    if (error) clearError();
+    
+    try {
+      await login(values);
+    } catch (error) {
+      console.error('Login error:', error);
+      // Error is handled by the useAuth hook
     }
   };
 
   const handleSocialLogin = async () => {
-    await socialAuth(SOCIAL_PROVIDERS.GOOGLE);
+    if (error) clearError();
+    
+    try {
+      await socialAuth('google');
+    } catch (error) {
+      console.error('Social login error:', error);
+      // Error is handled by the useAuth hook
+    }
   };
 
   return (
@@ -114,7 +125,7 @@ export default function LoginPage() {
                   input: 'h-12 pl-10 border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 transition-all duration-200 rounded-xl',
                   error: 'text-red-500 text-xs mt-1 font-medium',
                 }}
-                disabled={isLoading}
+                disabled={loading}
                 {...form.getInputProps('email')}
               />
             </div>
@@ -139,7 +150,7 @@ export default function LoginPage() {
                   innerInput: 'h-12',
                   error: 'text-red-500 text-xs mt-1 font-medium',
                 }}
-                disabled={isLoading}
+                disabled={loading}
                 {...form.getInputProps('password')}
               />
             </div>
@@ -154,7 +165,7 @@ export default function LoginPage() {
               classNames={{
                 label: 'text-sm text-gray-700 font-medium cursor-pointer',
               }}
-              disabled={isLoading}
+              disabled={loading}
             />
             <Link
               href="/auth/forgot-password"
@@ -165,18 +176,18 @@ export default function LoginPage() {
           </div>
 
           <motion.div
-            whileHover={{ scale: isLoading ? 1 : 1.01 }}
-            whileTap={{ scale: isLoading ? 1 : 0.99 }}
+            whileHover={{ scale: loading ? 1 : 1.01 }}
+            whileTap={{ scale: loading ? 1 : 0.99 }}
              className="flex justify-center pt-2"
           >
             <Button
               type="submit"
               size="md"
-              loading={isLoading}
+              loading={loading}
               className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </motion.div>
         </form>
@@ -209,10 +220,10 @@ export default function LoginPage() {
           <Button
             variant="outline"
             onClick={handleSocialLogin}
-            loading={isLoading}
+            loading={loading}
             className="px-8 h-12 border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200 font-medium text-gray-700 rounded-xl"
             leftSection={<IconBrandGoogle size={20} className="text-red-500" />}
-            disabled={isLoading}
+            disabled={loading}
           >
             Continue with Google
           </Button>
