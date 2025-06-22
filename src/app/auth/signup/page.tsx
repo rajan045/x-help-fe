@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { TextInput, PasswordInput, Text, Divider, Group, Alert, Button } from '@mantine/core';
+import { TextInput, PasswordInput, Text, Divider, Group, Alert, Button, Checkbox } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { 
   IconBrandGoogle, 
-  IconBrandLinkedin, 
   IconMail,
   IconLock,
   IconUser,
@@ -15,13 +14,13 @@ import {
   IconEyeOff,
   IconAlertCircle,
   IconArrowRight,
-  IconCheck
+  IconCheck,
+  IconUserPlus
 } from '@tabler/icons-react';
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
   
   const form = useForm({
     initialValues: {
@@ -32,9 +31,18 @@ export default function SignupPage() {
       agreeToTerms: false,
     },
     validate: {
-      name: (value) => (value.length < 2 ? 'Name must be at least 2 characters long' : null),
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Please enter a valid email address'),
+      name: (value) => {
+        if (!value) return 'Name is required';
+        if (value.length < 2) return 'Name must be at least 2 characters long';
+        return null;
+      },
+      email: (value) => {
+        if (!value) return 'Email is required';
+        if (!/^\S+@\S+\.\S+$/.test(value)) return 'Please enter a valid email address';
+        return null;
+      },
       password: (value) => {
+        if (!value) return 'Password is required';
         if (value.length < 8) return 'Password must be at least 8 characters long';
         if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) 
           return 'Password must contain uppercase, lowercase, and number';
@@ -61,15 +69,15 @@ export default function SignupPage() {
     }
   };
 
-  const handleSocialSignup = async (provider: 'google' | 'linkedin') => {
+  const handleSocialSignup = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Implement social signup
-      console.log(`Signing up with ${provider}`);
+      // TODO: Implement Google signup
+      console.log('Signing up with Google');
       await new Promise(resolve => setTimeout(resolve, 1500));
     } catch (error) {
-      setError(`Failed to sign up with ${provider}. Please try again.`);
+      setError('Failed to sign up with Google. Please try again.');
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -89,344 +97,274 @@ export default function SignupPage() {
   const passwordStrength = getPasswordStrength(form.values.password);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 w-full">
       {/* Header Section */}
-      <div className="text-center space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="space-y-4"
-        >
-          <h1 className="font-heading text-4xl sm:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent leading-tight">
-            Join Our Community
-          </h1>
-          
-          {/* Main CTA */}
-          <div className="relative">
-            <Text className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
-              Get or Give Career Advice Today
-            </Text>
-            <Text className="text-gray-600 text-base sm:text-lg">
-              Connect with professionals and mentors in your field
-            </Text>
-          </div>
-        </motion.div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="text-center space-y-4"
+      >
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4">
+          <IconUserPlus size={32} className="text-white" />
+        </div>
+        
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+          Join Our Community
+        </h1>
+        
+        <p className="text-gray-600 text-lg leading-relaxed max-w-sm mx-auto">
+          Start your career journey and connect with amazing mentors and professionals
+        </p>
+      </motion.div>
 
-      {/* Social Signup Section */}
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert
+              icon={<IconAlertCircle size={18} />}
+              color="red"
+              variant="light"
+              className="border border-red-200 bg-red-50 rounded-xl"
+            >
+              <Text className="text-red-700 font-medium text-sm">{error}</Text>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Signup Form */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="space-y-4"
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="space-y-6"
       >
-        <Group grow className="flex flex-col gap-4">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <form onSubmit={form.onSubmit(handleSubmit)} className="space-y-5">
+          <div className="space-y-4">
+            <div>
+              <TextInput
+                required
+                label="Full Name"
+                placeholder="Enter your full name"
+                size="md"
+                leftSection={<IconUser size={18} className="text-gray-400" />}
+                classNames={{
+                  label: 'text-gray-800 mb-1.5 font-medium text-sm',
+                  input: 'h-12 pl-10 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 rounded-xl',
+                  error: 'text-red-500 text-xs mt-1 font-medium',
+                }}
+                disabled={isLoading}
+                {...form.getInputProps('name')}
+              />
+            </div>
+
+            <div>
+              <TextInput
+                required
+                label="Email Address"
+                placeholder="Enter your email"
+                size="md"
+                leftSection={<IconMail size={18} className="text-gray-400" />}
+                classNames={{
+                  label: 'text-gray-800 mb-1.5 font-medium text-sm',
+                  input: 'h-12 pl-10 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 rounded-xl',
+                  error: 'text-red-500 text-xs mt-1 font-medium',
+                }}
+                disabled={isLoading}
+                {...form.getInputProps('email')}
+              />
+            </div>
+
+            <div>
+              <PasswordInput
+                required
+                label="Password"
+                placeholder="Create a strong password"
+                size="md"
+                leftSection={<IconLock size={18} className="text-gray-400" />}
+                visibilityToggleIcon={({ reveal }) =>
+                  reveal ? (
+                    <IconEyeOff size={18} className="text-gray-400 hover:text-gray-600 transition-colors" />
+                  ) : (
+                    <IconEye size={18} className="text-gray-400 hover:text-gray-600 transition-colors" />
+                  )
+                }
+                classNames={{
+                  label: 'text-gray-800 mb-1.5 font-medium text-sm',
+                  input: 'h-12 pl-10 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 rounded-xl',
+                  innerInput: 'h-12',
+                  error: 'text-red-500 text-xs mt-1 font-medium',
+                }}
+                disabled={isLoading}
+                {...form.getInputProps('password')}
+              />
+              {form.values.password && (
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Text size="xs" className="text-gray-600 font-medium">Password strength:</Text>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-1.5 w-6 rounded-full transition-colors ${
+                            level <= passwordStrength
+                              ? passwordStrength < 3
+                                ? 'bg-red-400'
+                                : passwordStrength < 4
+                                ? 'bg-yellow-400'
+                                : 'bg-green-500'
+                              : 'bg-gray-200'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <Text size="xs" className="text-gray-500">
+                    Use 8+ characters with uppercase, lowercase, and numbers
+                  </Text>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <PasswordInput
+                required
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                size="md"
+                leftSection={<IconLock size={18} className="text-gray-400" />}
+                visibilityToggleIcon={({ reveal }) =>
+                  reveal ? (
+                    <IconEyeOff size={18} className="text-gray-400 hover:text-gray-600 transition-colors" />
+                  ) : (
+                    <IconEye size={18} className="text-gray-400 hover:text-gray-600 transition-colors" />
+                  )
+                }
+                classNames={{
+                  label: 'text-gray-800 mb-1.5 font-medium text-sm',
+                  input: 'h-12 pl-10 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 rounded-xl',
+                  innerInput: 'h-12',
+                  error: 'text-red-500 text-xs mt-1 font-medium',
+                }}
+                disabled={isLoading}
+                {...form.getInputProps('confirmPassword')}
+              />
+              {form.values.confirmPassword && form.values.password === form.values.confirmPassword && (
+                <div className="absolute right-4 top-12 text-green-500">
+                  <IconCheck size={18} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-1">
+            <Checkbox
+              checked={form.values.agreeToTerms}
+              onChange={(event) => form.setFieldValue('agreeToTerms', event.currentTarget.checked)}
+              label={
+                <span className="text-sm text-gray-700 font-medium">
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-green-600 hover:text-green-700 hover:underline font-semibold">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-green-600 hover:text-green-700 hover:underline font-semibold">
+                    Privacy Policy
+                  </Link>
+                </span>
+              }
+              size="sm"
+              classNames={{
+                label: 'cursor-pointer',
+                error: 'text-red-500 text-xs mt-1 font-medium',
+              }}
+              disabled={isLoading}
+              error={form.errors.agreeToTerms}
+            />
+          </div>
+
+          <motion.div
+            whileHover={{ scale: isLoading ? 1 : 1.01 }}
+            whileTap={{ scale: isLoading ? 1 : 0.99 }}
+            className="flex justify-center pt-2"
+          >
             <Button
-              variant="outline"
-              onClick={() => handleSocialSignup('google')}
+              type="submit"
+              size="md"
               loading={isLoading}
-              className="w-full h-14 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all duration-200 font-semibold text-gray-700"
-              leftSection={<IconBrandGoogle size={24} className="text-red-500" />}
-              style={{ borderRadius: '12px' }}
+              className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              disabled={isLoading}
             >
-              Continue with Google
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </motion.div>
-          
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="outline"
-              onClick={() => handleSocialSignup('linkedin')}
-              loading={isLoading}
-              className="w-full h-14 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all duration-200 font-semibold text-gray-700"
-              leftSection={<IconBrandLinkedin size={24} className="text-blue-600" />}
-              style={{ borderRadius: '12px' }}
-            >
-              Continue with LinkedIn
-            </Button>
-          </motion.div>
-        </Group>
+        </form>
       </motion.div>
 
       {/* Divider */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
       >
         <Divider 
           label={
-            <button
-              onClick={() => setShowEmailForm(!showEmailForm)}
-              className="text-gray-500 text-sm font-semibold hover:text-gray-700 transition-colors cursor-pointer flex items-center gap-2"
-            >
-              Or continue with email
-              <motion.div
-                animate={{ rotate: showEmailForm ? 90 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <IconArrowRight size={16} />
-              </motion.div>
-            </button>
+            <span className="text-gray-500 text-sm font-medium px-3 py-1">
+              Or continue with
+            </span>
           }
           labelPosition="center"
-          classNames={{
-            root: 'relative',
-          }}
         />
       </motion.div>
 
-      {/* Email Form Section */}
+      {/* Social Signup Section */}
       <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ 
-          opacity: showEmailForm ? 1 : 0, 
-          height: showEmailForm ? 'auto' : 0 
-        }}
-        transition={{ duration: 0.3 }}
-        style={{ overflow: 'hidden' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="flex justify-center"
       >
-        {showEmailForm && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
+        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+          <Button
+            variant="outline"
+            onClick={handleSocialSignup}
+            loading={isLoading}
+            className="px-8 h-12 border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200 font-medium text-gray-700 rounded-xl"
+            leftSection={<IconBrandGoogle size={20} className="text-red-500" />}
+            disabled={isLoading}
           >
-            <form onSubmit={form.onSubmit(handleSubmit)} className="space-y-6">
-              <div className="space-y-5">
-                <div className="relative">
-                  <TextInput
-                    required
-                    label="Full Name"
-                    placeholder="Enter your full name"
-                    size="lg"
-                    leftSection={<IconUser size={20} className="text-gray-400" />}
-                    classNames={{
-                      label: 'text-gray-800 mb-2 font-semibold text-sm',
-                      input: 'text-gray-900 h-14 pl-12 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 bg-white/80 backdrop-blur-sm',
-                      error: 'text-red-500 text-sm mt-2 font-medium',
-                    }}
-                    styles={{
-                      input: {
-                        borderRadius: '12px',
-                        fontSize: '16px',
-                        fontWeight: 500,
-                      }
-                    }}
-                    {...form.getInputProps('name')}
-                  />
-                </div>
-
-                <div className="relative">
-                  <TextInput
-                    required
-                    label="Email Address"
-                    placeholder="Enter your email"
-                    size="lg"
-                    leftSection={<IconMail size={20} className="text-gray-400" />}
-                    classNames={{
-                      label: 'text-gray-800 mb-2 font-semibold text-sm',
-                      input: 'text-gray-900 h-14 pl-12 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 bg-white/80 backdrop-blur-sm',
-                      error: 'text-red-500 text-sm mt-2 font-medium',
-                    }}
-                    styles={{
-                      input: {
-                        borderRadius: '12px',
-                        fontSize: '16px',
-                        fontWeight: 500,
-                      }
-                    }}
-                    {...form.getInputProps('email')}
-                  />
-                </div>
-
-                <div className="relative">
-                  <PasswordInput
-                    required
-                    label="Password"
-                    placeholder="Create a strong password"
-                    size="lg"
-                    leftSection={<IconLock size={20} className="text-gray-400" />}
-                    visibilityToggleIcon={({ reveal }) =>
-                      reveal ? (
-                        <IconEyeOff size={20} className="text-gray-400 hover:text-gray-600 transition-colors" />
-                      ) : (
-                        <IconEye size={20} className="text-gray-400 hover:text-gray-600 transition-colors" />
-                      )
-                    }
-                    classNames={{
-                      label: 'text-gray-800 mb-2 font-semibold text-sm',
-                      input: 'text-gray-900 h-14 pl-12 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 bg-white/80 backdrop-blur-sm',
-                      innerInput: 'h-14 text-base font-medium',
-                      error: 'text-red-500 text-sm mt-2 font-medium',
-                    }}
-                    styles={{
-                      input: {
-                        borderRadius: '12px',
-                      },
-                      innerInput: {
-                        fontSize: '16px',
-                      }
-                    }}
-                    {...form.getInputProps('password')}
-                  />
-                  {form.values.password && (
-                    <div className="mt-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Text size="xs" className="text-gray-600 font-medium">Password strength:</Text>
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((level) => (
-                            <div
-                              key={level}
-                              className={`h-1.5 w-6 rounded-full transition-colors ${
-                                level <= passwordStrength
-                                  ? passwordStrength < 3
-                                    ? 'bg-red-400'
-                                    : passwordStrength < 4
-                                    ? 'bg-yellow-400'
-                                    : 'bg-green-500'
-                                  : 'bg-gray-200'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <Text size="xs" className="text-gray-500">
-                        Use 8+ characters with uppercase, lowercase, and numbers
-                      </Text>
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <PasswordInput
-                    required
-                    label="Confirm Password"
-                    placeholder="Confirm your password"
-                    size="lg"
-                    leftSection={<IconLock size={20} className="text-gray-400" />}
-                    visibilityToggleIcon={({ reveal }) =>
-                      reveal ? (
-                        <IconEyeOff size={20} className="text-gray-400 hover:text-gray-600 transition-colors" />
-                      ) : (
-                        <IconEye size={20} className="text-gray-400 hover:text-gray-600 transition-colors" />
-                      )
-                    }
-                    classNames={{
-                      label: 'text-gray-800 mb-2 font-semibold text-sm',
-                      input: 'text-gray-900 h-14 pl-12 border-2 border-gray-200 hover:border-green-300 focus:border-green-500 transition-all duration-200 bg-white/80 backdrop-blur-sm',
-                      innerInput: 'h-14 text-base font-medium',
-                      error: 'text-red-500 text-sm mt-2 font-medium',
-                    }}
-                    styles={{
-                      input: {
-                        borderRadius: '12px',
-                      },
-                      innerInput: {
-                        fontSize: '16px',
-                      }
-                    }}
-                    {...form.getInputProps('confirmPassword')}
-                  />
-                  {form.values.confirmPassword && form.values.password === form.values.confirmPassword && (
-                    <div className="absolute right-4 top-12 text-green-500">
-                      <IconCheck size={18} />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <div className="flex items-start">
-                  <input
-                    type="checkbox"
-                    id="agreeToTerms"
-                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-2 transition-all mt-0.5"
-                    {...form.getInputProps('agreeToTerms', { type: 'checkbox' })}
-                  />
-                  <label htmlFor="agreeToTerms" className="ml-3 text-sm text-gray-700 font-medium leading-5">
-                    I agree to the{' '}
-                    <Link href="/terms" className="text-green-600 hover:text-green-700 hover:underline font-semibold">
-                      Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link href="/privacy" className="text-green-600 hover:text-green-700 hover:underline font-semibold">
-                      Privacy Policy
-                    </Link>
-                  </label>
-                </div>
-                {form.errors.agreeToTerms && (
-                  <Text className="text-red-500 text-sm mt-2 font-medium">{form.errors.agreeToTerms}</Text>
-                )}
-              </div>
-
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                transition={{ duration: 0.1 }}
-              >
-                <Button
-                  type="submit"
-                  variant="filled"
-                  size="lg"
-                  loading={isLoading}
-                  className="w-full h-14 text-base font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
-                  style={{ borderRadius: '12px' }}
-                >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </motion.div>
-            </form>
-          </motion.div>
-        )}
+            Continue with Google
+          </Button>
+        </motion.div>
       </motion.div>
 
       {/* Footer Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="text-center pt-6"
+        transition={{ duration: 0.6, delay: 0.4 }}
+        className="text-center pt-4"
       >
-        <div className="p-6 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20">
-          <Text className="text-gray-700 text-base font-medium mb-3">
+        <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+          <Text className="text-gray-600 text-sm mb-3">
             Already have an account?
           </Text>
           <Link
             href="/auth/login"
-            className="inline-flex items-center gap-2 font-semibold text-green-600 hover:text-green-700 transition-colors text-lg"
+            className="inline-flex items-center gap-2 font-semibold text-green-600 hover:text-green-700 transition-colors"
           >
             Sign in here
-            <IconArrowRight size={18} />
+            <IconArrowRight size={16} />
           </Link>
         </div>
       </motion.div>
-
-      {/* Error Message */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        >
-          <Alert
-            icon={<IconAlertCircle size={18} />}
-            color="red"
-            variant="light"
-            className="border border-red-200 bg-red-50/80 backdrop-blur-sm"
-            styles={{
-              root: {
-                borderRadius: '12px',
-              }
-            }}
-          >
-            <Text className="text-red-700 font-medium">{error}</Text>
-          </Alert>
-        </motion.div>
-      )}
     </div>
   );
 } 

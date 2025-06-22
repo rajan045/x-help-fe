@@ -7,7 +7,6 @@ export const AUTH_ROUTES = {
 
 export const SOCIAL_PROVIDERS = {
   GOOGLE: 'google',
-  LINKEDIN: 'linkedin',
 } as const;
 
 export const AUTH_ERROR_MESSAGES = {

@@ -15,7 +15,7 @@ export type AuthFormData = {
   confirmPassword?: string;
 };
 
-export type SocialProvider = 'google' | 'linkedin';
+export type SocialProvider = 'google';
 
 export type AuthError = {
   code: string;
