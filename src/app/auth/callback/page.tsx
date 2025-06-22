@@ -38,9 +38,9 @@ export default function AuthCallback() {
         setStatus('success');
         setMessage('Authentication successful! Redirecting...');
         
-        // Redirect to dashboard
+        // Redirect to home page
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 2000);
       } catch (error) {
         console.error('Error processing auth callback:', error);

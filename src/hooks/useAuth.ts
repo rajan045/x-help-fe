@@ -25,7 +25,7 @@ export const useAuth = () => {
         throw new Error(result.message || 'Login failed');
       }
 
-      router.push('/dashboard');
+      router.push('/');
       return { user: result.user, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred';
@@ -53,7 +53,7 @@ export const useAuth = () => {
         throw new Error(result.message || 'Signup failed');
       }
 
-      router.push('/dashboard');
+      router.push('/');
       return { user: result.user, error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An error occurred';
