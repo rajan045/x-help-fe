@@ -1,6 +1,6 @@
 'use client';
 
-
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { 
@@ -20,11 +20,32 @@ import {
 } from '@tabler/icons-react';
 import { Card, Text, Badge, Avatar, Button } from '@mantine/core';
 
-// Mock data - replace with actual data from your backend
-const mockUser = {
-  isLoggedIn: true, // Change to false to see new user view
-  name: 'Alex Johnson',
-  avatar: '/images/user.jpg'
+// Get authentication status from localStorage
+const getAuthStatus = () => {
+  if (typeof window === 'undefined') return { isLoggedIn: false, user: null };
+  
+  const token = localStorage.getItem('auth_token');
+  const userData = localStorage.getItem('user_data');
+  
+  if (!token || !userData) {
+    return { isLoggedIn: false, user: null };
+  }
+  
+  try {
+    const user = JSON.parse(userData);
+    return {
+      isLoggedIn: true,
+      user: {
+        name: user.name || 'User',
+        email: user.email || '',
+        avatar: user.avatar || '/images/user.jpg',
+        role: user.role || 'user',
+        id: user.id
+      }
+    };
+  } catch {
+    return { isLoggedIn: false, user: null };
+  }
 };
 
 const upcomingSessions = [
@@ -259,7 +280,7 @@ const NewUserWelcome = () => {
 };
 
 // Logged-in User Dashboard Component
-const UserDashboard = () => {
+const UserDashboard = ({ user }: { user: any }) => {
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -275,12 +296,12 @@ const UserDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {mockUser.name}! 👋
+                Welcome back, {user?.name || 'User'}! 👋
               </h1>
               <p className="text-gray-600 mt-1">Here&apos;s what&apos;s happening with your career journey</p>
             </div>
-            <Link href="/profile/seeker-1" style={{ textDecoration: 'none' }}>
-              <Avatar src={mockUser.avatar} size={50} style={{ backgroundColor: '#3b82f6' }} className="cursor-pointer hover:opacity-80 transition-opacity" />
+            <Link href={`/profile/${user?.id || 'me'}`} style={{ textDecoration: 'none' }}>
+              <Avatar src={user?.avatar} size={50} style={{ backgroundColor: '#3b82f6' }} className="cursor-pointer hover:opacity-80 transition-opacity" />
             </Link>
           </div>
         </motion.div>
@@ -500,9 +521,31 @@ const UserDashboard = () => {
 
 // Main Home Page Component
 export default function HomePage() {
+  const [authState, setAuthState] = useState<{ isLoggedIn: boolean; user: any }>({ isLoggedIn: false, user: null });
+
+  useEffect(() => {
+    // Check auth status on component mount and when localStorage changes
+    const checkAuth = () => {
+      setAuthState(getAuthStatus());
+    };
+
+    checkAuth();
+
+    // Listen for storage changes (when user logs in/out in another tab)
+    window.addEventListener('storage', checkAuth);
+    
+    // Custom event for same-tab auth changes
+    window.addEventListener('authChange', checkAuth);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
+    };
+  }, []);
+
   return (
     <>
-      {mockUser.isLoggedIn ? <UserDashboard /> : <NewUserWelcome />}
+      {authState.isLoggedIn ? <UserDashboard user={authState.user} /> : <NewUserWelcome />}
     </>
   );
 }

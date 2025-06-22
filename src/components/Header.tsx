@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { 
   Group, 
   Button, 
@@ -29,13 +30,32 @@ import {
   IconSearch
 } from '@tabler/icons-react';
 
-// Mock user data - replace with actual auth context
-const mockUser = {
-  isLoggedIn: true, // Change this to test different states
-  name: 'Alex Johnson',
-  avatar: '/images/user.jpg',
-  type: 'seeker', // 'seeker' or 'mentor'
-  notifications: 3
+// Get authentication status from localStorage
+const getAuthStatus = () => {
+  if (typeof window === 'undefined') return { isLoggedIn: false, user: null };
+  
+  const token = localStorage.getItem('auth_token');
+  const userData = localStorage.getItem('user_data');
+  
+  if (!token || !userData) {
+    return { isLoggedIn: false, user: null };
+  }
+  
+  try {
+    const user = JSON.parse(userData);
+    return {
+      isLoggedIn: true,
+      user: {
+        name: user.name || 'User',
+        email: user.email || '',
+        avatar: user.avatar || '/images/user.jpg',
+        role: user.role || 'user',
+        id: user.id
+      }
+    };
+  } catch {
+    return { isLoggedIn: false, user: null };
+  }
 };
 
 interface HeaderProps {
@@ -45,10 +65,40 @@ interface HeaderProps {
 export default function Header({ variant = 'default' }: HeaderProps) {
   const router = useRouter();
   const [opened, { toggle, close }] = useDisclosure(false);
+  const [authState, setAuthState] = useState<{ isLoggedIn: boolean; user: any }>({ isLoggedIn: false, user: null });
+
+  useEffect(() => {
+    // Check auth status on component mount and when localStorage changes
+    const checkAuth = () => {
+      setAuthState(getAuthStatus());
+    };
+
+    checkAuth();
+
+    // Listen for storage changes (when user logs in/out in another tab)
+    window.addEventListener('storage', checkAuth);
+    
+    // Custom event for same-tab auth changes
+    window.addEventListener('authChange', checkAuth);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', checkAuth);
+    };
+  }, []);
 
   const handleLogout = () => {
-    // Handle logout logic here
-    console.log('Logging out...');
+    // Clear auth data
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_data');
+    
+    // Update auth state
+    setAuthState({ isLoggedIn: false, user: null });
+    
+    // Trigger custom event for other components
+    window.dispatchEvent(new Event('authChange'));
+    
+    // Redirect to login
     router.push('/auth/login');
   };
 
@@ -74,7 +124,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
           </Button>
         </Link>
         
-        {mockUser.type === 'mentor' && (
+        {authState.user?.role === 'mentor' && (
           <Link href="/dashboard/mentor" style={{ textDecoration: 'none' }}>
             <Button variant="subtle" leftSection={<IconDashboard size={16} />}>
               Dashboard
@@ -88,28 +138,27 @@ export default function Header({ variant = 'default' }: HeaderProps) {
         {/* Notifications */}
         <ActionIcon variant="light" size="lg" pos="relative">
           <IconBell size={18} />
-          {mockUser.notifications > 0 && (
-            <Badge
-              size="xs"
-              variant="filled"
-              color="red"
-              pos="absolute"
-              top={-2}
-              right={-2}
-              style={{ minWidth: 16, height: 16, padding: 0 }}
-            >
-              {mockUser.notifications}
-            </Badge>
-          )}
+          {/* You can add notification count from user data if available */}
+          <Badge
+            size="xs"
+            variant="filled"
+            color="red"
+            pos="absolute"
+            top={-2}
+            right={-2}
+            style={{ minWidth: 16, height: 16, padding: 0 }}
+          >
+            3
+          </Badge>
         </ActionIcon>
 
         {/* User Menu */}
         <Menu shadow="md" width={200}>
           <Menu.Target>
             <Group gap="sm" style={{ cursor: 'pointer' }}>
-              <Avatar src={mockUser.avatar} size={32} radius="xl" />
+              <Avatar src={authState.user?.avatar} size={32} radius="xl" />
               <Text size="sm" fw={500} visibleFrom="sm">
-                {mockUser.name}
+                {authState.user?.name}
               </Text>
             </Group>
           </Menu.Target>
@@ -118,7 +167,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
             <Menu.Label>Account</Menu.Label>
             <Menu.Item 
               leftSection={<IconUser size={14} />}
-              onClick={() => router.push('/profile/seeker-1')}
+              onClick={() => router.push(`/profile/${authState.user?.id || 'me'}`)}
             >
               View Profile
             </Menu.Item>
@@ -129,7 +178,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
               Settings
             </Menu.Item>
             
-            {mockUser.type === 'mentor' && (
+            {authState.user?.role === 'mentor' && (
               <>
                 <Menu.Divider />
                 <Menu.Label>Mentor</Menu.Label>
@@ -226,7 +275,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
             </Link>
 
             {/* Navigation based on auth status */}
-            {mockUser.isLoggedIn ? <LoggedInHeader /> : <LoggedOutHeader />}
+            {authState.isLoggedIn ? <LoggedInHeader /> : <LoggedOutHeader />}
           </Group>
         </Container>
       </Paper>
@@ -247,14 +296,14 @@ export default function Header({ variant = 'default' }: HeaderProps) {
         size="sm"
       >
         <Stack gap="md">
-          {mockUser.isLoggedIn ? (
+          {authState.isLoggedIn ? (
             <>
               {/* User Info */}
               <Group gap="md" p="md" style={{ backgroundColor: '#f8f9fa', borderRadius: 8 }}>
-                <Avatar src={mockUser.avatar} size={40} radius="xl" />
+                <Avatar src={authState.user?.avatar} size={40} radius="xl" />
                 <div>
-                  <Text fw={500}>{mockUser.name}</Text>
-                  <Text size="sm" c="dimmed" tt="capitalize">{mockUser.type}</Text>
+                  <Text fw={500}>{authState.user?.name}</Text>
+                  <Text size="sm" c="dimmed" tt="capitalize">{authState.user?.role}</Text>
                 </div>
               </Group>
 
@@ -288,7 +337,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
                 Sessions
               </Button>
               
-              {mockUser.type === 'mentor' && (
+              {authState.user?.role === 'mentor' && (
                 <Button 
                   variant="subtle" 
                   leftSection={<IconDashboard size={16} />}
@@ -305,7 +354,7 @@ export default function Header({ variant = 'default' }: HeaderProps) {
                 variant="subtle" 
                 leftSection={<IconUser size={16} />}
                 justify="flex-start"
-                onClick={() => { router.push('/profile/seeker-1'); close(); }}
+                onClick={() => { router.push(`/profile/${authState.user?.id || 'me'}`); close(); }}
               >
                 Profile
               </Button>

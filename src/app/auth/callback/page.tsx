@@ -35,6 +35,9 @@ export default function AuthCallback() {
         const userData = JSON.parse(decodeURIComponent(user));
         localStorage.setItem('user_data', JSON.stringify(userData));
         
+        // Trigger auth change event for Header component
+        window.dispatchEvent(new Event('authChange'));
+        
         setStatus('success');
         setMessage('Authentication successful! Redirecting...');
         
