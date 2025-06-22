@@ -1,207 +1,199 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService, User, AuthState } from '@/services/authService';
+import { 
+  useLoginMutation,
+  useSignupMutation,
+  useLogoutMutation,
+  useGetCurrentUserQuery,
+  useVerifyTokenQuery 
+} from '../lib/api/authApi';
+import type { User, LoginCredentials, SignupCredentials } from '../lib/api/types';
 import { SocialProvider } from '@/types/auth';
 import { LoginFormData, SignupFormData } from '@/validators/auth';
 
-interface UseAuthReturn extends AuthState {
+interface UseAuthReturn {
+  isLoggedIn: boolean;
+  user: User | null;
+  token: string | null;
   loading: boolean;
   error: string | null;
   login: (data: LoginFormData) => Promise<void>;
   signup: (data: SignupFormData) => Promise<void>;
   socialAuth: (provider: SocialProvider) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => void;
   clearError: () => void;
 }
 
+// Helper to get stored auth
+const getStoredAuth = () => {
+  if (typeof window === 'undefined') {
+    return { isLoggedIn: false, user: null, token: null };
+  }
+
+  try {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+
+    if (token && userData) {
+      return {
+        isLoggedIn: true,
+        user: JSON.parse(userData),
+        token,
+      };
+    }
+  } catch (error) {
+    console.error('Error reading auth from localStorage:', error);
+  }
+
+  return { isLoggedIn: false, user: null, token: null };
+};
+
 export const useAuth = (): UseAuthReturn => {
-  const [authState, setAuthState] = useState<AuthState & { loading: boolean; error: string | null }>({
-    isLoggedIn: false,
-    user: null,
-    token: null,
-    loading: true,
-    error: null,
-  });
+  const [authState, setAuthState] = useState(() => ({
+    ...getStoredAuth(),
+    error: null as string | null,
+  }));
   
   const router = useRouter();
 
-  // Update auth state from service
-  const updateAuthState = useCallback(() => {
-    const currentAuth = authService.getAuthState();
-    setAuthState(prev => ({
-      ...currentAuth,
-      loading: prev.loading,
-      error: prev.error,
-    }));
-  }, []);
+  // RTK Query hooks
+  const [loginMutation, { isLoading: loginLoading }] = useLoginMutation();
+  const [signupMutation, { isLoading: signupLoading }] = useSignupMutation();
+  const [logoutMutation, { isLoading: logoutLoading }] = useLogoutMutation();
+  
+  // Only query current user if we have a token
+  const { 
+    data: currentUserData,
+    isLoading: userLoading,
+    refetch: refetchUser 
+  } = useGetCurrentUserQuery(undefined, {
+    skip: !authState.token,
+  });
 
-  // Initialize auth state
+  const { 
+    data: tokenVerification,
+    isLoading: verifyLoading 
+  } = useVerifyTokenQuery(undefined, {
+    skip: !authState.token,
+  });
+
+  // Update auth state from localStorage changes
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        // Get current auth state
-        const currentAuth = authService.getAuthState();
-        
-        if (currentAuth.isLoggedIn) {
-          // Verify token is still valid
-          const isValid = await authService.verifyToken();
-          if (!isValid) {
-            // Token is invalid, clear auth
-            await authService.logout();
-            setAuthState(prev => ({
-              isLoggedIn: false,
-              user: null,
-              token: null,
-              loading: false,
-              error: prev.error,
-            }));
-            return;
-          }
-        }
-        
-        setAuthState(prev => ({
-          ...currentAuth,
-          loading: false,
-          error: prev.error,
-        }));
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setAuthState(prev => ({
-          isLoggedIn: false,
-          user: null,
-          token: null,
-          loading: false,
-          error: prev.error,
-        }));
-      }
-    };
-
-    initAuth();
-
-    // Listen for auth changes
     const handleAuthChange = () => {
-      updateAuthState();
+      setAuthState(prev => ({
+        ...getStoredAuth(),
+        error: prev.error,
+      }));
     };
 
     window.addEventListener('authChange', handleAuthChange);
-
+    
     return () => {
       window.removeEventListener('authChange', handleAuthChange);
     };
-  }, [updateAuthState]);
+  }, []);
+
+  // Handle token verification
+  useEffect(() => {
+    if (tokenVerification && !tokenVerification.valid) {
+      // Token is invalid, clear auth
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        window.dispatchEvent(new Event('authChange'));
+      }
+    }
+  }, [tokenVerification]);
 
   // Login with email and password
   const login = useCallback(async (data: LoginFormData) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+    setAuthState(prev => ({ ...prev, error: null }));
     
     try {
-      await authService.login({
+      await loginMutation({
         email: data.email,
         password: data.password,
-      });
+      }).unwrap();
       
-      updateAuthState();
       router.push('/dashboard');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed';
+    } catch (error: any) {
+      const message = error?.data?.message || error?.message || 'Login failed';
       setAuthState(prev => ({ ...prev, error: message }));
       throw error;
-    } finally {
-      setAuthState(prev => ({ ...prev, loading: false }));
     }
-  }, [updateAuthState, router]);
+  }, [loginMutation, router]);
 
   // Signup with email and password
   const signup = useCallback(async (data: SignupFormData) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+    setAuthState(prev => ({ ...prev, error: null }));
     
     try {
-      await authService.signup({
+      await signupMutation({
         name: data.name,
         email: data.email,
         password: data.password,
         role: data.role || 'seeker', // Default to 'seeker' if no role specified
-      });
+      }).unwrap();
       
-      updateAuthState();
       router.push('/dashboard');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Signup failed';
+    } catch (error: any) {
+      const message = error?.data?.message || error?.message || 'Signup failed';
       setAuthState(prev => ({ ...prev, error: message }));
       throw error;
-    } finally {
-      setAuthState(prev => ({ ...prev, loading: false }));
     }
-  }, [updateAuthState, router]);
+  }, [signupMutation, router]);
 
   // Social authentication
   const socialAuth = useCallback(async (provider: SocialProvider) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+    setAuthState(prev => ({ ...prev, error: null }));
     
     try {
       if (provider === 'google') {
-        authService.initiateGoogleLogin();
+        // For Google auth, we redirect to the backend OAuth URL
+        window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/auth/google`;
       } else {
         throw new Error(`${provider} authentication not supported`);
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Social authentication failed';
-      setAuthState(prev => ({ ...prev, error: message, loading: false }));
+    } catch (error: any) {
+      const message = error?.message || 'Social authentication failed';
+      setAuthState(prev => ({ ...prev, error: message }));
       throw error;
     }
   }, []);
 
   // Logout
   const logout = useCallback(async () => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
+    setAuthState(prev => ({ ...prev, error: null }));
     
     try {
-      await authService.logout();
-      setAuthState({
-        isLoggedIn: false,
-        user: null,
-        token: null,
-        loading: false,
-        error: null,
-      });
-      router.push('/');
+      await logoutMutation().unwrap();
     } catch (error) {
       console.error('Logout failed:', error);
       // Still clear local state even if API call fails
-      setAuthState({
-        isLoggedIn: false,
-        user: null,
-        token: null,
-        loading: false,
-        error: null,
-      });
+    } finally {
       router.push('/');
     }
-  }, [router]);
+  }, [logoutMutation, router]);
 
   // Refresh user data
-  const refreshUser = useCallback(async () => {
-    try {
-      const user = await authService.getCurrentUser();
-      if (user) {
-        updateAuthState();
-      }
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-    }
-  }, [updateAuthState]);
+  const refreshUser = useCallback(() => {
+    refetchUser();
+  }, [refetchUser]);
 
   // Clear error
   const clearError = useCallback(() => {
     setAuthState(prev => ({ ...prev, error: null }));
   }, []);
 
+  // Calculate loading state
+  const loading = loginLoading || signupLoading || logoutLoading || userLoading || verifyLoading;
+
   return {
     isLoggedIn: authState.isLoggedIn,
     user: authState.user,
     token: authState.token,
-    loading: authState.loading,
+    loading,
     error: authState.error,
     login,
     signup,

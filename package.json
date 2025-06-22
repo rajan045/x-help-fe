@@ -21,12 +21,14 @@
     "@mantine/spotlight": "^8.1.0",
     "@mantine/tiptap": "^8.1.0",
     "@prisma/client": "^6.9.0",
+    "@reduxjs/toolkit": "^2.8.2",
     "@tabler/icons-react": "^3.34.0",
     "framer-motion": "^12.18.1",
     "next": "15.3.3",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-redux": "^9.2.0",
     "zod": "^3.25.64"
   },
   "devDependencies": {

@@ -1,5 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { settingsService, UserProfile, Settings } from '@/services/settingsService';
+import { useCallback } from 'react';
+import { 
+  useGetSettingsQuery,
+  useUpdateSettingsMutation,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
+  useDeleteAccountMutation,
+} from '../lib/api/settingsApi';
+import type { UserProfile, Settings } from '../lib/api/types';
 import { notifications } from '@mantine/notifications';
 
 interface UseSettingsReturn {
@@ -11,46 +18,35 @@ interface UseSettingsReturn {
   updateProfile: (newProfile: Partial<UserProfile>) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
   deleteAccount: (password?: string) => Promise<void>;
-  refetch: () => Promise<void>;
+  refetch: () => void;
 }
 
 export const useSettings = (): UseSettingsReturn => {
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // RTK Query hooks
+  const { 
+    data: settingsData, 
+    isLoading: settingsLoading, 
+    error: settingsError,
+    refetch 
+  } = useGetSettingsQuery();
 
-  // Fetch settings and profile data
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await settingsService.getSettings();
-      setSettings(data.settings);
-      setProfile(data.profile);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch settings';
-      setError(errorMessage);
-      console.error('Error fetching settings:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [updateSettingsMutation, { isLoading: updateSettingsLoading }] = useUpdateSettingsMutation();
+  const [updateProfileMutation, { isLoading: updateProfileLoading }] = useUpdateProfileMutation();
+  const [changePasswordMutation, { isLoading: changePasswordLoading }] = useChangePasswordMutation();
+  const [deleteAccountMutation, { isLoading: deleteAccountLoading }] = useDeleteAccountMutation();
 
   // Update settings
   const updateSettings = useCallback(async (newSettings: Partial<Settings>) => {
     try {
-      const updatedSettings = await settingsService.updateSettings(newSettings);
-      setSettings(updatedSettings);
+      await updateSettingsMutation(newSettings).unwrap();
       
       notifications.show({
         title: 'Success',
         message: 'Settings updated successfully',
         color: 'green',
       });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update settings';
+    } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.message || 'Failed to update settings';
       
       notifications.show({
         title: 'Error',
@@ -60,21 +56,20 @@ export const useSettings = (): UseSettingsReturn => {
       
       throw err;
     }
-  }, []);
+  }, [updateSettingsMutation]);
 
   // Update profile
   const updateProfile = useCallback(async (newProfile: Partial<UserProfile>) => {
     try {
-      const updatedProfile = await settingsService.updateProfile(newProfile);
-      setProfile(updatedProfile);
+      await updateProfileMutation(newProfile).unwrap();
       
       notifications.show({
         title: 'Success',
         message: 'Profile updated successfully',
         color: 'green',
       });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
+    } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.message || 'Failed to update profile';
       
       notifications.show({
         title: 'Error',
@@ -84,7 +79,7 @@ export const useSettings = (): UseSettingsReturn => {
       
       throw err;
     }
-  }, []);
+  }, [updateProfileMutation]);
 
   // Change password
   const changePassword = useCallback(async (
@@ -93,15 +88,19 @@ export const useSettings = (): UseSettingsReturn => {
     confirmPassword: string
   ) => {
     try {
-      await settingsService.changePassword(currentPassword, newPassword, confirmPassword);
+      await changePasswordMutation({
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      }).unwrap();
       
       notifications.show({
         title: 'Success',
         message: 'Password changed successfully',
         color: 'green',
       });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to change password';
+    } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.message || 'Failed to change password';
       
       notifications.show({
         title: 'Error',
@@ -111,12 +110,12 @@ export const useSettings = (): UseSettingsReturn => {
       
       throw err;
     }
-  }, []);
+  }, [changePasswordMutation]);
 
   // Delete account
   const deleteAccount = useCallback(async (password?: string) => {
     try {
-      await settingsService.deleteAccount(password);
+      await deleteAccountMutation({ password }).unwrap();
       
       // Clear local storage
       localStorage.removeItem('authToken');
@@ -130,8 +129,8 @@ export const useSettings = (): UseSettingsReturn => {
         message: 'Your account has been successfully deleted',
         color: 'green',
       });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete account';
+    } catch (err: any) {
+      const errorMessage = err?.data?.message || err?.message || 'Failed to delete account';
       
       notifications.show({
         title: 'Error',
@@ -141,21 +140,20 @@ export const useSettings = (): UseSettingsReturn => {
       
       throw err;
     }
-  }, []);
+  }, [deleteAccountMutation]);
 
-  // Refetch data
-  const refetch = useCallback(async () => {
-    await fetchData();
-  }, [fetchData]);
+  // Calculate loading state
+  const loading = settingsLoading || updateSettingsLoading || updateProfileLoading || 
+                  changePasswordLoading || deleteAccountLoading;
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // Calculate error state
+  const error = settingsError ? 
+    (settingsError as any)?.data?.message || (settingsError as any)?.message || 'An error occurred' : 
+    null;
 
   return {
-    settings,
-    profile,
+    settings: settingsData?.settings || null,
+    profile: settingsData?.profile || null,
     loading,
     error,
     updateSettings,
